@@ -15,3 +15,4 @@ class ProductAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     list_filter = ('product_status','product_type')
 
+admin.site.register(ProductImage)

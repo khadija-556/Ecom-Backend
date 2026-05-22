@@ -19,7 +19,7 @@ class CustomUser(AbstractUser):
     photo_url = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add = True)
 
-    objects = CustomUserManager()
+    objects = CustomUserManager() # type: ignore
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['phone']
@@ -43,11 +43,12 @@ class Product(models.Model):
         ('publish','Publish'),
     )
     product_status = models.CharField(max_length=20, choices=PRODUCT_STATUS_CHOICES, default='pending')
-    long_description = models.TextField()
-    short_description = models.TextField()
+    thumbnail = models.ImageField(upload_to='product_thumbnails/', blank=True, null=True)
+    long_description = models.TextField(null=True, blank=True)
+    short_description = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add = True)
-    update_at = models.DateTimeField(auto_now = True)
+    updated_at = models.DateTimeField(auto_now = True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -71,5 +72,14 @@ class Product(models.Model):
         return self.title 
 
         
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image1 = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    image4 = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    image5 = models.ImageField(upload_to='product_images/', blank=True, null=True)
 
+    def __str__(self):
+        return f"Images for {self.product.title}"
 
