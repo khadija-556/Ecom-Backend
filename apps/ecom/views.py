@@ -126,7 +126,7 @@ class CategoryListView(APIView):
             return Response(base_error_response("Category not found"),
             status = status.HTTP_404_NOT_FOUND)
 
-        category_serialize = CategorySerializer(category,many=True)
+        category_serialize = CategoryListSerializer(category,many=True)
 
         if not category_serialize.data:
             return Response(base_error_response("Failed to serialize category data"),
@@ -162,7 +162,7 @@ class CategoryDetailAPI(APIView):
             return Response(base_error_response("Cateogory not active"),
             status=status.HTTP_404_NOT_FOUND)
         
-        category_serializer = CategorySerializer(category)
+        category_serializer = CategorySerializer(category , context={'request': request})
 
         if category_serializer.data:
             return Response(base_success_response("Category retrived successfully",

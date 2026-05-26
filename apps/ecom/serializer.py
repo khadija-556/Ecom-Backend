@@ -75,6 +75,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     created_by = UserInfoSerializer(read_only=True)
+    thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -82,30 +83,49 @@ class ProductSerializer(serializers.ModelSerializer):
 
         read_only_fields = ['created_by', 'created_at', 'slug', 'product_code']
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
+    def get_thumbnail(self, obj):
+
         request = self.context.get('request')
-        if instance.thumbnail and hasattr(instance.thumbnail, 'url'):
-            representation['thumbnail'] = request.build_absolute_uri(instance.thumbnail.url)
-        else:
-            representation['thumbnail'] = None
-        return representation
+
+        if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
+
+            if request:
+                return request.build_absolute_uri(obj.thumbnail.url)
+
+            return obj.thumbnail.url
+
+        return None
 
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    products = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Category
-        fields = ['id','title','slug','description','show_in_nav','is_showcase','is_active']
+        fields = ['id','title','slug','description','show_in_nav','is_showcase','is_active', 'products']
 
         read_only_fields = ['updated_at', 'created_at', 'slug']
+
+    def get_products(self, obj):
+        product_categories = ProductCategory.objects.filter(category=obj)
+
+        products = Product.objects.filter(
+            product_categories__category=obj
+        ).distinct()
+
+        return ProductSerializer(
+            products,
+            many=True,
+            context=self.context
+        ).data
 
 
 class CategoryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id','title','slug','is_active']
+        fields = ['id','title','slug','is_active','show_in_nav','is_showcase',]
+        read_only_fields = ['updated_at', 'created_at', 'slug']
 
 
 class SubCategorySerializer(serializers.ModelSerializer):

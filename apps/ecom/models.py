@@ -147,3 +147,10 @@ class SubCategory(models.Model):
         return self.title
 
 
+class ProductCategory(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, related_name='product_categories')
+    category = models.ForeignKey(Category, on_delete=models.DO_NOTHING, related_name='category_products')
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.DO_NOTHING, related_name='subcategory_products', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.product.title} - {self.category.title} - {self.subcategory.title if self.subcategory else 'No Subcategory' }"

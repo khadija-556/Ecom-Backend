@@ -33,3 +33,5 @@ class SubCategoryAdmin(admin.ModelAdmin):
     search_fields = ('title','slug')
     ordering = ('-created_at',)
     list_filter = ('is_active',)
+
+admin.site.register(ProductCategory)
