@@ -100,3 +100,46 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id','title','slug','description','show_in_nav','is_showcase','is_active']
 
         read_only_fields = ['updated_at', 'created_at', 'slug']
+
+
+class CategoryListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id','title','slug','is_active']
+
+
+class SubCategorySerializer(serializers.ModelSerializer):
+    category = CategoryListSerializer(read_only=True)
+
+    class Meta:
+        model = SubCategory
+        fields = ['id','title','slug','description','category','is_active']
+
+        read_only_fields = ['updated_at', 'created_at', 'slug']
+
+    def create(self, validated_data):
+        category_id = self.context['request'].data.get('category_pk')
+        if not category_id:
+            raise serializers.ValidationError("Category ID is required.")
+        try:
+            category = Category.objects.get(id=category_id)
+            if not category:
+                raise serializers.ValidationError("Category not found.")
+            validated_data['category'] = category
+            return super().create(validated_data)
+        except Category.DoesNotExist:
+            raise serializers.ValidationError("Category not found.")
+        
+    def update(self, instance, validated_data):
+        category_id = self.context['request'].data.get('category_pk')
+        if category_id:
+            try:
+                category = Category.objects.get(id=category_id)
+                if not category:
+                    raise serializers.ValidationError("Category not found.")
+                instance.category = category
+            except Category.DoesNotExist:
+                raise serializers.ValidationError("Category not found.")
+        return super().update(instance, validated_data)
+        
+

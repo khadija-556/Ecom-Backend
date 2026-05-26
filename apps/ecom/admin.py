@@ -25,3 +25,11 @@ class CategoryAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     list_filter = ('show_in_nav','is_showcase','is_active')
     
+
+@admin.register(SubCategory)
+class SubCategoryAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("title",)}
+    list_display = ('title','category','is_active')
+    search_fields = ('title','slug')
+    ordering = ('-created_at',)
+    list_filter = ('is_active',)

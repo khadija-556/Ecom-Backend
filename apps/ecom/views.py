@@ -39,8 +39,6 @@ class ProductListView(APIView):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 ########  Product Detail API ##########
 
 class ProductDetailView(APIView):
@@ -205,12 +203,95 @@ class CategoryDetailAPI(APIView):
         status=status.HTTP_200_OK)
 
 
+########  Subcategory List API ##########
 
+class SubCategoryListView(APIView):
+
+    def get(self, request):
+
+        subcategories = SubCategory.objects.filter(is_active=True)
+        if not subcategories.exists():
+            return Response(base_error_response("No subcategories found"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        subcategory_serializer = SubCategorySerializer(subcategories, many=True)
+        if subcategory_serializer.data:
+            return Response(base_success_response("Subcategories retrieved successfully", 
+                                              data = subcategory_serializer.data),
+                                            status=status.HTTP_200_OK,)
+        
+        return Response(base_error_response("Failed to serialize subcategory data", errors=subcategory_serializer.errors),status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def post(self, request):
+
+        subcategory_serializer = SubCategorySerializer(data=request.data, context={'request': request})
+        if subcategory_serializer.is_valid():
+            subcategory_serializer.save()
+            return Response(base_success_response("Subcategory created successfully", 
+                                                  data = subcategory_serializer.data ), 
+                                                  status=status.HTTP_201_CREATED)
+        return Response(base_error_response("Failed to create subcategory", 
+                                            errors=subcategory_serializer.errors),
+                                            status=status.HTTP_400_BAD_REQUEST)
+
+
+########  Subcategory Detail API ##########
+
+class SubCategoryDetailView(APIView):
+
+    def get(self, request, pk):
+
+        try:
+            subcategory = SubCategory.objects.get(id=pk, is_active=True)
+        except SubCategory.DoesNotExist:
+            return Response(base_error_response("Subcategory not found or inactive"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        subcategory_serializer = SubCategorySerializer(subcategory, context={'request': request})
+        if subcategory_serializer.data:
+            return Response(base_success_response("Subcategory retrieved successfully", 
+                                              data=subcategory_serializer.data), 
+                                              status=status.HTTP_200_OK)
+        return Response(base_error_response("Failed to serialize subcategory data",  
+                                            errors=subcategory_serializer.errors),
+                                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)     
+
+    def put(self, request, pk):
+
+        try:
+            subcategory = SubCategory.objects.get(id=pk)
+        except SubCategory.DoesNotExist:
+            return Response(base_error_response("Subcategory not found"), 
+                            status=status.HTTP_404_NOT_FOUND)
+        subcategory_serializer = SubCategorySerializer(subcategory, data=request.data, partial=True, context={'request': request})
+        if subcategory_serializer.is_valid():
+            subcategory_serializer.save()
+            return Response(base_success_response("Subcategory updated successfully", 
+                                                  data=subcategory_serializer.data), 
+                                                  status=status.HTTP_200_OK)
+        return Response(base_error_response("Failed to update subcategory", 
+                                            errors=subcategory_serializer.errors),
+                                            status=status.HTTP_400_BAD_REQUEST) 
+    
+    def delete(self, request, pk):
+        try:
+            subcategory = SubCategory.objects.get(id=pk)
+        except SubCategory.DoesNotExist:
+            return Response(base_error_response("Subcategory not found"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        subcategory.delete()
+
+        return Response(base_success_response("Subcategory deleted successfully"), 
+                        status=status.HTTP_200_OK)
+
+
+        
+    
         
 
     
 
-   
 
 
 

@@ -83,6 +83,7 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Images for {self.product.title}"
 
+
 class Category(models.Model):
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
@@ -111,10 +112,38 @@ class Category(models.Model):
                 self.slug = original.slug
 
         return super().save(*args, **kwargs)
-
-
-
-
     
+    def __str__(self):
+        return self.title
+
+
+class SubCategory(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title)
+            unique_slug = base_slug
+            suffix = 1
+
+            while SubCategory.objects.filter(slug=unique_slug).exclude(id=self.id).exists():
+                unique_slug = f"{base_slug}-{suffix}"
+                suffix += 1
+            
+            self.slug = unique_slug
+            if self.pk:  
+                original = SubCategory.objects.get(pk=self.pk)
+                self.slug = original.slug
+
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
 
 
