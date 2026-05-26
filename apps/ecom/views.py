@@ -118,6 +118,100 @@ class ProductDetailView(APIView):
         )
 
 
+########  Category List API ##########
+
+class CategoryListView(APIView):
+
+    def get(self,request):
+        category = Category.objects.filter(is_active=True)
+        if not category:
+            return Response(base_error_response("Category not found"),
+            status = status.HTTP_404_NOT_FOUND)
+
+        category_serialize = CategorySerializer(category,many=True)
+
+        if not category_serialize.data:
+            return Response(base_error_response("Failed to serialize category data"),
+            status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(base_success_response("Category Retrived Successfully",
+        data = category_serialize.data), status = status.HTTP_200_OK)
+
+
+    def post(self,request):
+        data = request.data
+        serialize = CategorySerializer(data = data)
+        if serialize.is_valid():
+            serialize.save()
+            return Response(base_success_response("Category Create Successfully",
+            data= serialize.data),status=status.HTTP_201_CREATED)
+
+        return Response(base_error_response("Faild to create category",errors = serialize.errors),
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+########  Category Detail API ##########
+
+class CategoryDetailAPI(APIView):
+
+    def get(self,request,pk):
+        category = Category.objects.get(id=pk)
+        if not category:
+            return Response(base_error_response("Cateogory not found"),
+            status=status.HTTP_404_NOT_FOUND)
+
+        if not category.is_active:
+            return Response(base_error_response("Cateogory not active"),
+            status=status.HTTP_404_NOT_FOUND)
+        
+        category_serializer = CategorySerializer(category)
+
+        if category_serializer.data:
+            return Response(base_success_response("Category retrived successfully",
+            data=category_serializer.data),status=status.HTTP_200_OK)
+
+        return Response(base_error_response("Category failed to serialized",errors=category_serializer.errors),
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self,request,pk):
+        data = request.data
+        category = Category.objects.get(id=pk)
+
+        if not category:
+            return Response(base_error_response("Cateogory not found"),
+            status=status.HTTP_404_NOT_FOUND)
+
+        category_serializer = CategorySerializer(category,data=data,partial=True)
+
+        if category_serializer.is_valid():
+            category_serializer.save()
+            return Response(base_success_response("Category updated successfully",data=category_serializer.data),
+            status=status.HTTP_200_OK)
+
+        return Response(base_error_response("Category can not update",errors=category_serializer.errors),
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self,request,pk):
+        category = Category.objects.get(id=pk)
+
+        if not category:
+            return Response(base_error_response("Cateogory not found"),
+            status=status.HTTP_404_NOT_FOUND)
+
+
+        category.delete()
+
+        return Response(base_success_response("Category delate successfully"),
+        status=status.HTTP_200_OK)
+
+
+
+        
+
+    
+
+   
+
 
 
 

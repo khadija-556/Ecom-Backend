@@ -16,3 +16,12 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('product_status','product_type')
 
 admin.site.register(ProductImage)
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("title",)}
+    list_display = ('title','show_in_nav','is_showcase','is_active')
+    search_fields = ('title','slug')
+    ordering = ('-created_at',)
+    list_filter = ('show_in_nav','is_showcase','is_active')
+    

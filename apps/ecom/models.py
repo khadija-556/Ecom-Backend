@@ -82,3 +82,39 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Images for {self.product.title}"
+
+class Category(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, null=True, blank=True)
+    show_in_nav = models.BooleanField(default=False)
+    is_showcase = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add = True)
+    updated_at = models.DateTimeField(auto_now = True)
+
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title)
+            unique_slug = base_slug
+            suffix = 1
+
+            while Category.objects.filter(slug=unique_slug).exclude(id=self.id).exists():
+                unique_slug = f"{base_slug}-{suffix}"
+                suffix += 1
+
+            self.slug = unique_slug
+
+            if self.pk:  
+                original = Category.objects.get(pk=self.pk)
+                self.slug = original.slug
+
+        return super().save(*args, **kwargs)
+
+
+
+
+    
+
+

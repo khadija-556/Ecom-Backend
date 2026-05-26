@@ -90,3 +90,13 @@ class ProductSerializer(serializers.ModelSerializer):
         else:
             representation['thumbnail'] = None
         return representation
+
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Category
+        fields = ['id','title','slug','description','show_in_nav','is_showcase','is_active']
+
+        read_only_fields = ['updated_at', 'created_at', 'slug']
