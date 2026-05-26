@@ -82,4 +82,3 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Images for {self.product.title}"
-

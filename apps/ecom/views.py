@@ -119,3 +119,5 @@ class ProductDetailView(APIView):
 
 
 
+
+
