@@ -32,10 +32,10 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'product_code', 'title', 'slug', 'ingredients', 'product_type', 'product_status', 'thumbnail','short_description', 'long_description', 'images', 'created_by', 'created_at', 'updated_at']
+        fields = ['id', 'product_code', 'title', 'slug', 'ingredients', 'product_type', 'product_status', 'thumbnail','short_description', 'long_description', 'images', 'subcategory', 'created_by', 'created_at', 'updated_at']
 
         read_only_fields = ['created_by', 'created_at', 'slug', 'updated_at', 'images']
-        write_only_fields = ['thumbnail']
+        write_only_fields = ['thumbnail', 'subcategory']
 
         extra_kwargs = {
             'product_code': {'required': False, },
@@ -99,26 +99,26 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    products = serializers.SerializerMethodField(read_only=True)
+    
 
     class Meta:
         model = Category
-        fields = ['id','title','slug','description','show_in_nav','is_showcase','is_active', 'products']
+        fields = ['id','title','slug','description','show_in_nav','is_showcase','is_active']
 
         read_only_fields = ['updated_at', 'created_at', 'slug']
 
-    def get_products(self, obj):
-        product_categories = ProductCategory.objects.filter(category=obj)
+    # def get_products(self, obj):
+    #     product_categories = ProductCategory.objects.filter(category=obj)
 
-        products = Product.objects.filter(
-            product_categories__category=obj
-        ).distinct()
+    #     products = Product.objects.filter(
+    #         product_categories__category=obj
+    #     ).distinct()
 
-        return ProductSerializer(
-            products,
-            many=True,
-            context=self.context
-        ).data
+    #     return ProductSerializer(
+    #         products,
+    #         many=True,
+    #         context=self.context
+    #     ).data
 
 
 class CategoryListSerializer(serializers.ModelSerializer):

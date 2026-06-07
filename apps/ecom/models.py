@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from .manager import CustomUserManager
 from django.utils.text import slugify
+from decimal import Decimal
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 
@@ -46,6 +49,7 @@ class Product(models.Model):
     thumbnail = models.ImageField(upload_to='product_thumbnails/', blank=True, null=True)
     long_description = models.TextField(null=True, blank=True)
     short_description = models.TextField(null=True, blank=True)
+    subcategory = models.ForeignKey('SubCategory', on_delete=models.DO_NOTHING, related_name='products', blank=True, null=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add = True)
     updated_at = models.DateTimeField(auto_now = True)
@@ -147,10 +151,86 @@ class SubCategory(models.Model):
         return self.title
 
 
-class ProductCategory(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, related_name='product_categories')
-    category = models.ForeignKey(Category, on_delete=models.DO_NOTHING, related_name='category_products')
-    subcategory = models.ForeignKey(SubCategory, on_delete=models.DO_NOTHING, related_name='subcategory_products', blank=True, null=True)
+
+class Attribute(models.Model):
+    title = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.product.title} - {self.category.title} - {self.subcategory.title if self.subcategory else 'No Subcategory' }"
+        return self.title
+
+class ProductAttribute(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attributes')
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.product.title} for {self.attribute.title}"
+    
+class AttributeValue(models.Model):
+    product_attribute = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE, related_name='values')
+    value = models.CharField(max_length=100)
+    regular_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    DISCOUNT_TYPE_CHOICES = (
+        ('percentage', 'Percentage'),
+        ('flat', 'Flat'),
+    )
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, blank=True, null=True)
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    discount_start = models.DateTimeField(blank=True, null=True)
+    discount_end = models.DateTimeField(blank=True, null=True)
+
+    def clean(self):
+        if self.regular_price is None:
+            return
+
+        if self.discount_type == 'percentage':
+            if self.discount_value is not None and self.discount_value > 100:
+                raise ValidationError({
+                    "discount_value": "Percentage discount cannot exceed 100."
+                })
+
+        if self.discount_type == 'flat':
+            if self.discount_value is not None and self.discount_value > self.regular_price:
+                raise ValidationError({
+                    "discount_value": "Flat discount cannot exceed regular price."
+                })
+            
+    def save(self, *args, **kwargs):
+        self.full_clean() 
+        super().save(*args, **kwargs)
+
+
+
+    @property
+    def final_price(self):
+
+        if self.regular_price is None:
+            return Decimal('0')
+        
+        now = timezone.now()
+
+        if self.discount_start and now < self.discount_start:
+            return self.regular_price
+
+        if self.discount_end and now > self.discount_end:
+            return self.regular_price
+        
+        if not self.discount_type or self.discount_value is None:
+            return self.regular_price
+
+        # flat discount
+        if self.discount_type == 'flat':
+            return max(
+                Decimal('0'),
+                self.regular_price - self.discount_value
+            )
+
+        # percentage discount
+        if self.discount_type == 'percentage':
+            return self.regular_price - (
+                self.regular_price * self.discount_value / Decimal('100')
+            )
+
+        return self.regular_price
+    
+    def __str__(self):
+        return f"{self.product_attribute.product.title} - Regular Price: {self.regular_price} - Final Price: {self.final_price}"

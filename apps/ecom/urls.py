@@ -11,4 +11,7 @@ urlpatterns = [
    
    path('subcategory/', SubCategoryListView.as_view(), name='subcategory-list'),
    path('subcategory/<int:pk>/', SubCategoryDetailView.as_view(), name='subcategory-detail'),
+
+   path('products-by-subcategory/<int:subcategory_pk>/', ProductsBySubcategoryView.as_view(), name='products-by-subcategory'),
+   path('products-by-category/<int:category_pk>/', ProductsByCategoryView.as_view(), name='products-by-category'),
 ] 

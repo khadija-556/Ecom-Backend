@@ -34,4 +34,6 @@ class SubCategoryAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     list_filter = ('is_active',)
 
-admin.site.register(ProductCategory)
+admin.site.register(Attribute)
+admin.site.register(ProductAttribute)
+admin.site.register(AttributeValue)

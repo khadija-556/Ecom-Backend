@@ -286,7 +286,59 @@ class SubCategoryDetailView(APIView):
                         status=status.HTTP_200_OK)
 
 
-        
+########  Products by Subcategory API ##########    
+
+class ProductsBySubcategoryView(APIView):
+
+    def get(self, request, subcategory_pk):
+
+        try:
+            subcategory = SubCategory.objects.get(id=subcategory_pk, is_active=True)
+        except SubCategory.DoesNotExist:
+            return Response(base_error_response("Subcategory not found or inactive"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        products = Product.objects.filter(subcategory=subcategory, product_status='publish')
+        if not products.exists():
+            return Response(base_error_response("No products found for this subcategory"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        product_serializer = ProductSerializer(products, many=True, context={'request': request})
+        if product_serializer.data:
+            return Response(base_success_response("Products retrieved successfully", 
+                                              data=product_serializer.data), 
+                                              status=status.HTTP_200_OK)
+        return Response(base_error_response("Failed to serialize product data", 
+                                            errors=product_serializer.errors),
+                                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+
+########  Products by Category API ##########  
+
+class ProductsByCategoryView(APIView):
+
+    def get(self, request, category_pk):
+
+        try:
+            category = Category.objects.get(id=category_pk, is_active=True)
+        except Category.DoesNotExist:
+            return Response(base_error_response("Category not found or inactive"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        products = Product.objects.filter(subcategory__category=category, product_status='publish')
+        if not products.exists():
+            return Response(base_error_response("No products found for this category"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        product_serializer = ProductSerializer(products, many=True, context={'request': request})
+        if product_serializer.data:
+            return Response(base_success_response("Products retrieved successfully", 
+                                              data=product_serializer.data), 
+                                              status=status.HTTP_200_OK)
+        return Response(base_error_response("Failed to serialize product data", 
+                                            errors=product_serializer.errors),
+                                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
         
 
