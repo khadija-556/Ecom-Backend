@@ -37,3 +37,4 @@ class SubCategoryAdmin(admin.ModelAdmin):
 admin.site.register(Attribute)
 admin.site.register(ProductAttribute)
 admin.site.register(AttributeValue)
+admin.site.register(GeneralSettings)

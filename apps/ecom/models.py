@@ -151,12 +151,12 @@ class SubCategory(models.Model):
         return self.title
 
 
-
 class Attribute(models.Model):
     title = models.CharField(max_length=255)
 
     def __str__(self):
         return self.title
+
 
 class ProductAttribute(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attributes')
@@ -165,6 +165,7 @@ class ProductAttribute(models.Model):
     def __str__(self):
         return f"{self.product.title} for {self.attribute.title}"
     
+
 class AttributeValue(models.Model):
     product_attribute = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE, related_name='values')
     value = models.CharField(max_length=100)
@@ -234,3 +235,23 @@ class AttributeValue(models.Model):
     
     def __str__(self):
         return f"{self.product_attribute.product.title} - Regular Price: {self.regular_price} - Final Price: {self.final_price}"
+
+
+######## General Settings API ##########
+
+class GeneralSettings(models.Model):
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    facebook_url = models.URLField(blank=True, null=True)
+    instagram_url = models.URLField(blank=True, null=True)
+    tikTok_url = models.URLField(blank=True, null=True)
+    youtube_url = models.URLField(blank=True, null=True)
+    promotion_image = models.ImageField(upload_to='promotions/', blank=True, null=True)
+    banner_image_1 = models.ImageField(upload_to='banners/', blank=True, null=True)
+    banner_image_2 = models.ImageField(upload_to='banners/', blank=True, null=True)
+    banner_image_3 = models.ImageField(upload_to='banners/', blank=True, null=True)
+
+
+    def __str__(self):
+        return "General Settings"

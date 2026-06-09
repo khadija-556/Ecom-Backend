@@ -342,7 +342,22 @@ class ProductsByCategoryView(APIView):
     
         
 
-    
+class GeneralSettingsView(APIView):
+
+    def get(self, request):
+        settings = GeneralSettings.objects.first()
+        if not settings:
+            return Response(base_error_response("General settings not found"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = GeneralSettingsSerializer(settings, context={'request': request})
+        if serializer.data:
+            return Response(base_success_response("General settings retrieved successfully", 
+                                              data=serializer.data), 
+                                              status=status.HTTP_200_OK)
+        return Response(base_error_response("Failed to serialize general settings data", 
+                                            errors=serializer.errors),
+                                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 

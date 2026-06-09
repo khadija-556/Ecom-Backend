@@ -200,4 +200,20 @@ class AttributeValueSerializer(serializers.ModelSerializer):
         fields = ['value','regular_price','discount_type','discount_value','discount_start','discount_end']
 
 
+class GeneralSettingsSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = GeneralSettings
+        fields = ('__all__')
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+
+        for field in ['promotion_image', 'banner_image_1', 'banner_image_2', 'banner_image_3']:
+            image_field = getattr(instance, field)
+            if image_field and hasattr(image_field, 'url'):
+                representation[field] = request.build_absolute_uri(image_field.url)
+            else:
+                representation[field] = None
+        return representation
