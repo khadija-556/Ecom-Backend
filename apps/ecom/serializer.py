@@ -29,10 +29,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     created_by = UserInfoSerializer(read_only=True)
     images = serializers.SerializerMethodField()
+    pricing = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ['id', 'product_code', 'title', 'slug', 'ingredients', 'product_type', 'product_status', 'thumbnail','short_description', 'long_description', 'images', 'subcategory', 'created_by', 'created_at', 'updated_at']
+        fields = ['id', 'product_code', 'title', 'slug', 'ingredients', 'product_type', 'product_status', 'thumbnail','short_description', 'long_description', 'images', 'subcategory', 'pricing','created_by', 'created_at', 'updated_at']
 
         read_only_fields = ['created_by', 'created_at', 'slug', 'updated_at', 'images']
         write_only_fields = ['thumbnail', 'subcategory']
@@ -71,7 +72,36 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             data['thumbnail'] = thumbnail_url if thumbnail_url else None
             return data
         return None
- 
+
+    def get_pricing(self,obj):
+
+        product_attribute = ProductAttribute.objects.get(product=obj) 
+        if not product_attribute:
+            return null
+
+        attribute = Attribute.objects.get(product_attribute = product_attribute)
+        if not attribute:
+            return null
+
+        attribute_value = AttributeValue.objects.filter(product_attribute = product_attribute)
+        if not attribute_value:
+            return null
+
+        attribute_value_serializer = AttributeValueSerializer(attribute_value, many=True)
+
+        if attribute_value_serializer.data:
+            response = []
+
+            for item in attribute_value_serializer.data:
+                data = dict(item)
+                data["attribute_type"] = attribute.title
+                response.append(data)
+
+            return response
+
+        return null
+
+
 
 class ProductSerializer(serializers.ModelSerializer):
     created_by = UserInfoSerializer(read_only=True)
@@ -162,4 +192,12 @@ class SubCategorySerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Category not found.")
         return super().update(instance, validated_data)
         
+
+class AttributeValueSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AttributeValue
+        fields = ['value','regular_price','discount_type','discount_value','discount_start','discount_end']
+
+
 

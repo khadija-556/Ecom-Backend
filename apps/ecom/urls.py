@@ -14,4 +14,4 @@ urlpatterns = [
 
    path('products-by-subcategory/<int:subcategory_pk>/', ProductsBySubcategoryView.as_view(), name='products-by-subcategory'),
    path('products-by-category/<int:category_pk>/', ProductsByCategoryView.as_view(), name='products-by-category'),
-] 
+]
