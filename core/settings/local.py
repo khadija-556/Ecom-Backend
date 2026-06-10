@@ -16,3 +16,10 @@ DATABASES = {
 
 
 CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+
+SIMPLE_JWT ={
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ALGORITHMS": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+}

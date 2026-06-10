@@ -2,11 +2,111 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Product
 from .response import base_error_response, base_success_response, Codenco
 from .serializer import *
 import os
+
+
+########  Registration API ##########
+
+class UserRegistration(APIView):
+    def post(self,request):
+        data = request.data
+
+        if data.get('password') != data.get('confirm_password'):
+            return Response(base_error_response("Passwords do not match"),
+                            status= status.HTTP_400_BAD_REQUEST)
+
+        if not data.get('email'):
+            return Response(base_error_response("Email is Required"))
+        
+        if CustomUser.objects.filter(email = data.get('email')).exists():
+            return Response(base_error_response("User with this email already exist"),
+                            status = status.HTTP_400_BAD_REQUEST)
+
+        serializer = UserRegistrationSerializer(data=data, context={'request':request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(base_success_response("User Registered Successfully" ,data= serializer.data),
+                            status = status.HTTP_201_CREATED)
+
+        return Response(base_error_response('Serilizer Error',errors = serializer.errors),
+                        status = status.HTTP_400_BAD_REQUEST)
+
+class LoginAPIVIEW(APIView):
+    def post(self,request):
+        data = request.data
+
+        email = data.get("email")
+        password = data.get("password")
+
+        try:
+            user = CustomUser.objects.get(email = email)
+        except CustomUser.DoesNotExist:
+            return Response(base_error_response("Invalid Email and Password"),
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        if not user.is_active:
+            return Response(base_error_response("User is not Active"),
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(password):
+            return Response(base_error_response("Invalid Email and Password"),
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        ecom_refresh_token = RefreshToken.for_user(user)
+        ecom_access_token = str(ecom_refresh_token.access_token)
+
+        data = {
+            'user_id' : user.id,
+            'email' : user.email,
+            'ecom_access_token' : ecom_access_token,
+        }
+
+        response = Response(base_success_response("Login successful",data = data),
+                        status=status.HTTP_200_OK)
+
+        cookie_max_age = 60*60*24*30
+        host = request.get_host()
+
+        if host.startswith('127.0.0.1') or host.startswith('localhost'):
+            cookie_domain = None
+        else:
+            cookie_domain = os.getenv('COOKIE_DOMAIN')
+
+        response.set_cookie(
+            key = 'ecom_refresh_token',
+            value= ecom_refresh_token,
+            httponly=True,
+            secure=True,
+            samesite='None',
+            domain=cookie_domain,
+            max_age=cookie_max_age,
+        )
+
+        response.set_cookie(
+            key = 'ecom_access_token',
+            value= ecom_access_token,
+            httponly=True,
+            secure=True,
+            samesite='None',
+            domain=cookie_domain,
+            max_age=cookie_max_age,
+        )
+
+        return response
+
+        
+
+
+        
+
+
+
+
 
 
 ########  Product List API ##########

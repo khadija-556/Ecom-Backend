@@ -1,6 +1,7 @@
 
 from pathlib import Path
 from dotenv import load_dotenv 
+from datetime import timedelta
 import os
 load_dotenv()
 
@@ -29,6 +30,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.ecom',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     
 ]
 

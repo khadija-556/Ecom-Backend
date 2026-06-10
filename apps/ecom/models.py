@@ -24,8 +24,10 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager() # type: ignore
 
+    username = None
+
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['phone']
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.email if self.email else self.phone
