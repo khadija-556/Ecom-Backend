@@ -4,7 +4,10 @@ from .views import *
 
 urlpatterns = [
    path('registration/', UserRegistration.as_view(), name='registration'),
-   path('login/', LoginAPIVIEW.as_view(), name='login'),
+   path('login/', LoginView.as_view(), name='login'),
+   path('refresh/', RefreshTokenView.as_view(), name='refresh'),
+   path('logout/', LogoutView.as_view(), name='logout'),
+
 
    path('products/', ProductListView.as_view(), name='product-list'),
    path('products/<int:pk>/', ProductDetailView.as_view(), name='product-detail'),

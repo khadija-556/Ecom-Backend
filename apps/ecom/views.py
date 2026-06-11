@@ -5,6 +5,9 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Product
+import datetime
+from datetime import timedelta
+from django.utils.http import http_date
 from .response import base_error_response, base_success_response, Codenco
 from .serializer import *
 import os
@@ -36,7 +39,7 @@ class UserRegistration(APIView):
         return Response(base_error_response('Serilizer Error',errors = serializer.errors),
                         status = status.HTTP_400_BAD_REQUEST)
 
-class LoginAPIVIEW(APIView):
+class LoginView(APIView):
     def post(self,request):
         data = request.data
 
@@ -99,7 +102,119 @@ class LoginAPIVIEW(APIView):
 
         return response
 
+class RefreshTokenView(APIView):
+    def post(self, request):
+        refresh_token = request.COOKIES.get('ecom_refresh_token')
+        if not refresh_token:
+            return Response(base_error_response("Refresh token not found"), 
+                            status=status.HTTP_400_BAD_REQUEST)
         
+        try:
+            old_refresh_token = RefreshToken(refresh_token)
+            old_refresh_token.blacklist()
+
+            payload = old_refresh_token.payload
+            user_id = payload.get('user_id')
+            user = CustomUser.objects.get(id=user_id)
+
+            new_refresh_token = RefreshToken.for_user(user)
+            new_access_token = str(new_refresh_token.access_token)
+            
+            response = Response(base_success_response("Token refreshed successfully"),status=status.HTTP_200_OK)
+            cookie_max_age = 60 * 60 * 24 * 30
+            host = request.get_host()
+
+            if host.startswith('127.0.0.1') or host.startswith('localhost'):
+                cookie_domain = None
+            else:
+                cookie_domain = os.getenv('COOKIE_DOMAIN')
+       
+            response.set_cookie(
+                key = 'ecom_access_token',
+                value= new_access_token,
+                httponly=True,
+                secure=True,
+                samesite='None',
+                domain=cookie_domain,
+                max_age=cookie_max_age,
+            )
+
+            response.set_cookie(
+                key='ecom_refresh_token',
+                value=new_refresh_token,
+                httponly=True,
+                secure=True,
+                samesite='None',
+                max_age=cookie_max_age,
+                domain=cookie_domain
+            )
+
+            return response
+        except CustomUser.DoesNotExist:
+            return Response(base_error_response("User not found"), 
+                            status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception as e:
+            return Response(base_error_response("Invalid refresh token"), 
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutView(APIView):
+    def post(self,request):
+        refresh_token = request.COOKIES.get('ecom_refresh_token')
+        if not refresh_token:
+            return Response(base_error_response("Refresh token not found"), 
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        old_refresh_token = RefreshToken(refresh_token)
+        old_refresh_token.blacklist()
+
+        response = Response(base_success_response("Logout Successfully"),
+                            status=status.HTTP_200_OK)
+
+        past_date = http_date((datetime.datetime.now(datetime.UTC) - timedelta(days=1)).timestamp())
+
+        host = request.get_host()
+
+        if host.startswith('127.0.0.1') or host.startswith('localhost'):
+            cookie_domain = None
+        else:
+            cookie_domain = os.getenv('COOKIE_DOMAIN')
+
+        response.set_cookie(
+            key='ecom_access_token',
+            value='',
+            httponly=True,
+            secure=True,
+            samesite='None',
+            max_age=0,
+            expires=past_date,
+            domain=cookie_domain
+        )
+
+        response.set_cookie(
+            key='ecom_refresh_token',
+            value='',
+            httponly=True,
+            secure=True,
+            samesite='None',
+            max_age=0,
+            expires=past_date,
+            domain=cookie_domain
+        )
+        
+        return response
+
+
+
+
+
+    
+            
+
+
+        
+
 
 
         
