@@ -5,6 +5,8 @@ from django.utils.text import slugify
 from decimal import Decimal
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+import random
+
 
 # Create your models here.
 
@@ -22,6 +24,14 @@ class CustomUser(AbstractUser):
     photo_url = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add = True)
 
+    is_email_verified = models.BooleanField(default = False)
+    email_token = models.CharField(max_length = 20, null = True, blank = True)
+    email_token_expired = models.DateTimeField(null = True, blank = True)
+
+    password_reset_token = models.CharField(max_length = 20, null = True, blank = True)
+    paasword_token_expired = models.DateTimeField(null = True, blank = True)
+
+
     objects = CustomUserManager() # type: ignore
 
     username = None
@@ -31,6 +41,24 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email if self.email else self.phone
+
+    def generate_password_reset_token(self):
+        token = random.randint(100000,999999)
+        expire_time = timezone.now() + timezone.timedelta(hours = 1)
+        self.password_reset_token = token
+        self.paasword_token_expired = expire_time
+        self.save()
+        return token
+
+    
+    def generate_email_verification_token(self):
+        token = random.randint(100000,999999)
+        expire_time = timezone.now() + timezone.timedelta(hours = 1)
+        self.email_token = token
+        self.email_token_expired = expire_time
+        self.save()
+        return token
+
 
 
 class Product(models.Model):
