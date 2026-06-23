@@ -351,37 +351,100 @@ class UpdatePasswordAPIView(APIView):
             return Response(base_error_response("Failed to update password: {}".format(str(e))), 
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# class ChangePasswordAPIView(APIView):
-#     def post(self,request):
-#         data = request.data
-#         token = data.get('otp')
-#         new_password = data.get('new_password')
+#==    Request Password Reset API    ==#
+class RequestPasswordResetAPIView(APIView):
+    def post(self,request):
+        data = request.data
+        email = data.get('email')
 
-#         if not new_password:
-#             return Response(base_error_response("New password is required"),
-#                             status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            return Response(base_error_response('email is required'),
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response(base_error_response("User with this email does not exist"), 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            self.send_password_reset_email(user)
+        except Exception as e:
+            return Response(base_error_response("Failed to send password reset email: {}".format(str(e))), 
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(base_success_response("Password reset link sent to your email"), 
+                    status=status.HTTP_200_OK)
+
         
-#         if not token:
-#                 return Response(base_error_response("OTP is required"), 
-#                                 status=status.HTTP_400_BAD_REQUEST)
+    def send_password_reset_email(self, user):
+        token = user.generate_password_reset_token()
 
-#         user = get_object_or_false(CustomUser, password_reset_token=token)
+        send_mail(
+                    subject='Password Reset Token',
+                    message='Your password reset token is: {}'.format(token),
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[user.email],
+                    html_message=f"""
+                    <p>Hi {user.first_name},</p>
+                    <p>Your password reset token is: <strong>{token}</strong>. This
+                    will expire in 24 hours.</p> """
+                )
 
-#         if not user:
-#                 return Response(base_error_response("Invalid OTP"), 
-#                                 status=status.HTTP_400_BAD_REQUEST)
+#==    Verify Password Reset OTP    ==#
+class VerifyPasswordResetOTPAPIView(APIView):
+    def post(self,request):
+        data = request.data
+        token = data.get('otp')
 
-#         if user.paasword_token_expired < timezone.now():
-#             return Response(base_error_response("OTP has expired"), 
-#                                 status=status.HTTP_400_BAD_REQUEST)
+        if not token:
+            return Response(base_error_response('OTP is Required'))
+
+        user = get_object_or_false(CustomUser, password_reset_token=token)
+
+        if not user:
+            return Response(base_error_response("Invalid OTP"),
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if user.paasword_token_expired < timezone.now():
+            return Response(base_error_response("OTP has Expired"))
+
+        return Response(base_success_response("OTP verified successfully"),
+                        status=status.HTTP_200_OK)
+
+
+#==    Chnage Password API    ==#
+class ChangePasswordAPIView(APIView):
+    def post(self,request):
+        data = request.data
+        token = data.get('otp')
+        new_password = data.get('new_password')
+
+        if not new_password:
+            return Response(base_error_response("New password is required"),
+                            status=status.HTTP_400_BAD_REQUEST)
         
-#         user.set_password(new_password)
-#         user.password_reset_token = None
-#         user.password_reset_expire = None
-#         user.save()
+        if not token:
+                return Response(base_error_response("OTP is required"), 
+                                status=status.HTTP_400_BAD_REQUEST)
 
-#         return Response(base_success_response("Password updated successfully"),
-#                         status=status.HTTP_200_OK)
+        user = get_object_or_false(CustomUser, password_reset_token=token)
+
+        if not user:
+                return Response(base_error_response("Invalid OTP"), 
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        if user.paasword_token_expired < timezone.now():
+            return Response(base_error_response("OTP has expired"), 
+                                status=status.HTTP_400_BAD_REQUEST)
+        
+        user.set_password(new_password)
+        user.password_reset_token = None
+        user.password_reset_expire = None
+        user.save()
+
+        return Response(base_success_response("Password updated successfully"),
+                        status=status.HTTP_200_OK)
 
         
     
