@@ -3,6 +3,20 @@ from .views import *
 
 
 urlpatterns = [
+   path('registration/', UserRegistration.as_view(), name='registration'),
+   path('verify-email/', EmailVerification.as_view(), name='verify-email'),
+   path('resend-email/', ResendEmailVerificationAPIView.as_view(), name='resend-email'),
+
+   path('req-pass-reset/', RequestPasswordResetAPIView.as_view()),
+   path('verify-otp/', VerifyPasswordResetOTPAPIView.as_view()),
+   path('change-pass/', ChangePasswordAPIView.as_view()),
+
+   path('login/', LoginView.as_view(), name='login'),
+   path('refresh/', RefreshTokenView.as_view(), name='refresh'),
+   path('logout/', LogoutView.as_view(), name='logout'),
+   
+   path('update-pass/', UpdatePasswordAPIView.as_view(), name='update-pass'),
+
    path('products/', ProductListView.as_view(), name='product-list'),
    path('products/<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
 
