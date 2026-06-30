@@ -217,3 +217,4 @@ class GeneralSettingsSerializer(serializers.ModelSerializer):
             else:
                 representation[field] = None
         return representation
+    
