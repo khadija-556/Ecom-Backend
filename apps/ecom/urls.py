@@ -18,6 +18,7 @@ urlpatterns = [
    path('update-pass/', UpdatePasswordAPIView.as_view(), name='update-pass'),
 
    path('products/', ProductListView.as_view(), name='product-list'),
+   path('product-create/', ProductCreateView.as_view(), name='product-create'),
    path('products/<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
 
    path('category/', CategoryListView.as_view(), name='category-list'),

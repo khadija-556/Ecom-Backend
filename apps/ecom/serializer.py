@@ -94,7 +94,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         return representation
     
     def create(self, validated_data):
-        user = CustomUser.objects.get(id = 1)
+        user = CustomUser.objects.get(id = self.context.get('request').user.id)
         validated_data['created_by'] = user
         return super().create(validated_data)
 
@@ -111,17 +111,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     def get_pricing(self,obj):
 
-        product_attribute = ProductAttribute.objects.get(product=obj) 
-        if not product_attribute:
-            return null
+        product_attribute = ProductAttribute.objects.get(product=obj) if ProductAttribute.objects.filter(product=obj).exists() else None
 
-        attribute = Attribute.objects.get(product_attribute = product_attribute)
-        if not attribute:
-            return null
+        attribute = Attribute.objects.get(product_attribute = product_attribute) if Attribute.objects.filter(product_attribute = product_attribute).exists() else None
 
-        attribute_value = AttributeValue.objects.filter(product_attribute = product_attribute)
-        if not attribute_value:
-            return null
+        attribute_value = AttributeValue.objects.filter(product_attribute = product_attribute) if AttributeValue.objects.filter(product_attribute = product_attribute).exists() else None
 
         attribute_value_serializer = AttributeValueSerializer(attribute_value, many=True)
 
@@ -135,7 +129,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
             return response
 
-        return null
+        return None
 
 
 

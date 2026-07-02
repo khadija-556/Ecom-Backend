@@ -12,6 +12,7 @@ from django.core.mail import send_mail
 from .response import base_error_response, base_success_response, Codenco
 from .serializer import *
 from .shortcuts import get_object_or_false
+from .authentication import JWTAuthentication
 from django.conf import settings
 import os
 
@@ -446,27 +447,6 @@ class ChangePasswordAPIView(APIView):
         return Response(base_success_response("Password updated successfully"),
                         status=status.HTTP_200_OK)
 
-        
-    
-
-
-
-
-
-
-    
-            
-
-
-        
-
-
-
-        
-
-
-
-
 
 
 ########  Product List API ##########
@@ -486,7 +466,12 @@ class ProductListView(APIView):
                                               data=product_serializer.data),
                                               status=status.HTTP_200_OK)
     
+    
 
+class ProductCreateView(APIView):
+    
+    authentication_classes = [JWTAuthentication]
+    
     def post(self, request):
         data = request.data
         serializer = ProductDetailSerializer(data=data, context={'request': request})
@@ -502,6 +487,7 @@ class ProductListView(APIView):
 ########  Product Detail API ##########
 
 class ProductDetailView(APIView):
+    
 
     def get(self, request, pk):
         try:
