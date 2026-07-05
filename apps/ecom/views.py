@@ -156,7 +156,7 @@ class LoginView(APIView):
             return Response(base_error_response("User is not Active"),
                             status=status.HTTP_400_BAD_REQUEST)
         if not user.is_email_verified:
-            return Response(base_error_response("Email is not verified"), 
+            return Response(base_error_response("Email is not verified", errors={'is_email_verified': False}), 
                             status=status.HTTP_403_FORBIDDEN)
 
         if not user.check_password(password):
@@ -169,6 +169,9 @@ class LoginView(APIView):
         data = {
             'user_id' : user.id,
             'email' : user.email,
+            'first_name' : user.first_name,
+            'last_name' : user.last_name,
+            'is_email_verified' : user.is_email_verified,
             'ecom_access_token' : ecom_access_token,
         }
 

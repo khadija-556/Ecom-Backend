@@ -136,10 +136,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     created_by = UserInfoSerializer(read_only=True)
     thumbnail = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ['id', 'product_code', 'title', 'slug', 'product_status', 'thumbnail', 'created_by', 'created_at']
+        fields = ['id', 'product_code', 'title', 'slug', 'product_status', 'thumbnail', 'price', 'created_by', 'created_at']
 
         read_only_fields = ['created_by', 'created_at', 'slug', 'product_code']
 
@@ -155,6 +156,20 @@ class ProductSerializer(serializers.ModelSerializer):
             return obj.thumbnail.url
 
         return None
+
+    def get_price(self, obj):
+        product_attribute = ProductAttribute.objects.filter(product=obj).first()
+        if not product_attribute:
+            return None
+
+        attribute_value = AttributeValue.objects.filter(
+            product_attribute=product_attribute
+        ).first()
+
+        if not attribute_value:
+            return None
+
+        return AttributeValueSerializer(attribute_value).data
 
 
 
