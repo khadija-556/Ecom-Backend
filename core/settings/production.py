@@ -22,13 +22,13 @@ SIMPLE_JWT ={
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "https://gulbahar.halima.com.bd/",
-    "https://www.gulbahar.halima.com.bd/",
+    "https://gulbahar.halima.com.bd",
+    "https://www.gulbahar.halima.com.bd",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://gulbahar.halima.com.bd/",
-    "https://www.gulbahar.halima.com.bd/",
+    "https://gulbahar.halima.com.bd",
+    "https://www.gulbahar.halima.com.bd",
 ]
 
 SECURE_SSL_REDIRECT = True
